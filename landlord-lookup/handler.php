@@ -19,9 +19,6 @@ $html = file_get_html($url1);
 $table = $html->find('table',3);
 $block = substr($table->find('tr',1)->children(9)->innertext,2);
 $lot = substr($table->find('tr',2)->children(8)->innertext,2);
-echo "Lot: ".$lot.'<br>';;
-//echo '<br>';
-echo "Block: ".$block.'<br>';
 
 $bl = "http://api.blocksandlots.com/blankslate/json/data/743cd788-eb98-4fb6-af18-0811261ad168/records/search?apikey=cvq842zthjdvr25cq9p5s6db&Block=$block&Lot=$lot&rp=350&em=true&_=1289069608577";
 
@@ -34,7 +31,7 @@ $jsarray = json_decode($json);
 //print_r($jsarray);
 //echo '<br><br>';
 $owner =  $jsarray->application[0]->entity[0]->record[0]->field[5]->fieldValue;
-echo "owner: ".$owner.'<br>';
+
 
 $ch = curl_init("http://appext9.dos.state.ny.us/corp_public/CORPSEARCH.SELECT_ENTITY");
 
@@ -55,12 +52,28 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 $str = curl_exec($ch);
 curl_close($ch);
 
-$html = str_get_html($str); 
-$addr = $html->find('table[id=tblAddr]',0)->find('tr',1)->children(0);
-echo "NYS Department of State 
-Division of Corporations 
-Search Results: <br>";
-echo $addr;
+echo "<table id='table'>
+<tr><td>Block:</td><td>$block</td></tr>
+<tr><td>Lot:</td><td>$lot</td></tr>
+<tr><td>Owner:</td><td>$owner</td></tr>
+";
+
+if($str!=''){
+	$html = str_get_html($str); 
+	$addr = $html->find('table[id=tblAddr]',0)->find('tr',1)->children(0);
+
+	echo "<tr>
+		<td>NYS Department of State<br/> 
+		Divsion of Corporations<br/> 
+		Search Results:</td>
+		<td>$addr</td>
+	</tr>
+	";
+}
+echo "
+</table>
+";
+
 ?>
 
 

@@ -26,7 +26,6 @@ puts "Tax Lot: " + tax_lot.to_s
 page = agent.get('http://api.blocksandlots.com/blankslate/json/data/743cd788-eb98-4fb6-af18-0811261ad168/records/search?apikey=cvq842zthjdvr25cq9p5s6db&Block='+tax_block.to_s+'&Lot='+tax_lot.to_s+'&rp=350&em=true&_=1289069608577')
 
 jdata = JSON.parse(page.body)
-
 owner = ""
 
 jdata["application"][0]["entity"][0]["record"][0]["field"].each { |f|
@@ -36,16 +35,39 @@ jdata["application"][0]["entity"][0]["record"][0]["field"].each { |f|
   end
 }
 
-dos_page = agent.get('http://dos.state.ny.us')
-dos_form = dos_page.forms[1]
+#TODO: find out how who is the actual current owner. Is it the last record?
+owners = []
+jdata["application"][0]["entity"][0]["record"].each do |record|
+  record["field"].each do |f|
+    if f["fieldName"] == "Owner Name"
+      owners << f["fieldValue"]
+      #      puts "Owner: " + owner
+    end
+  end
+end
+puts "Possible Owners: #{owners}"
+owners.each do |owner|
+  dos_page = agent.get('http://dos.state.ny.us')
+  dos_form = dos_page.forms[1]
 
-dos_form['p_entity_name'] = owner
-dos_page = agent.submit(dos_form, dos_form.buttons.first)
-
-owner_page = dos_page.link_with(:text => owner).click
-
-puts owner_page.search("//table[@id='tblAddr']/tr[2]/td[1]/text()")
-
+  dos_form['p_entity_name'] = owner
+  dos_page = agent.submit(dos_form, dos_form.buttons.first)
+  #  begin
+  owner_link = dos_page.links.find do |l|
+    if l.text[owner].nil?
+      nil
+    else
+      l
+    end
+  end
+  if owner_link.nil?
+    puts "Owner #{owner} not found in DOS"
+  else
+    puts "Owner #{owner} was found in DOS"
+    owner_page = owner_link.click
+    puts owner_page.search("//table[@id='tblAddr']/tr[2]/td[1]/text()")  
+  end
+end
 
 
 
